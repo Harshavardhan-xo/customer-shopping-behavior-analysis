@@ -1,0 +1,1 @@
+SELECT stage,COUNT(DISTINCT user_id) users FROM funnel_events GROUP BY stage ORDER BY CASE stage WHEN 'visit' THEN 1 WHEN 'signup' THEN 2 WHEN 'trial' THEN 3 WHEN 'purchase' THEN 4 END;
