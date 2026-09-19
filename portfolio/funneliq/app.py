@@ -11,19 +11,19 @@ try:
     attr=last_touch() if model=="last-touch" else linear()
     with __import__("sqlite3").connect(Path(__file__).resolve().parent/"funneliq.db") as c:
         funnel=pd.read_sql_query("SELECT * FROM funnel_events",c)
-except FileNotFoundError:
+except (FileNotFoundError,__import__("sqlite3").Error):
     st.error("Run python data/generate_synthetic_data.py first."); st.stop()
 
 c1,c2,c3,c4=st.columns(4)
-c1.metric("Spend",f"$${attr.cost_attributed.sum():,.0f}")
-c2.metric("Revenue",f"$${attr.revenue_attributed.sum():,.0f}")
+c1.metric("Spend",f"${attr.cost_attributed.sum():,.0f}")
+c2.metric("Revenue",f"${attr.revenue_attributed.sum():,.0f}")
 c3.metric("Blended ROI",f"{attr.revenue_attributed.sum()/max(attr.cost_attributed.sum(),1):.2f}x")
 c4.metric("Conversions",f"{attr.conversions.sum():,}")
 
 st.plotly_chart(px.funnel(funnel.groupby("stage",as_index=False).user_id.nunique(),y="stage",x="user_id",title="Funnel"),use_container_width=True)
 st.plotly_chart(px.bar(attr,x="channel",y="ROI",title=f"ROI by Channel — {model}"),use_container_width=True)
 rec=recommend(attr,pct)
-st.info(f"Illustrative reallocation: move {pct:.0%} from {rec['from_channel']} to {rec['to_channel']}; estimated incremental revenue $${rec['estimated_incremental_revenue']:,.0f}.")
+st.info(f"Illustrative reallocation: move {pct:.0%} from {rec['from_channel']} to {rec['to_channel']}; estimated incremental revenue ${rec['estimated_incremental_revenue']:,.0f}.")
 
 if st.button("Export 1-page summary to Excel"):
     out=Path("exports"); out.mkdir(exist_ok=True)
